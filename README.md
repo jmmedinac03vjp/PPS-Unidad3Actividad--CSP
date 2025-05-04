@@ -8,7 +8,7 @@ Implementación y Evaluación de Content Security Policy (CSP)
 [![CSP](https://img.shields.io/badge/CSP-Activa-brightgreen)](#)
 
 ## 📌 Tema
-**Protección contra XSS e inyección de scripts**
+**Aplicar CSP nos permite protección contra XSS e inyección de scripts**
 
 ## 🎯 Objetivo
 Aplicar una Content Security Policy (CSP) restrictiva y evaluar su impacto.
@@ -17,13 +17,56 @@ Aplicar una Content Security Policy (CSP) restrictiva y evaluar su impacto.
 
 ## ❓ ¿Qué es CSP?
 
-CSP (Content Security Policy) es un mecanismo de seguridad que limita los orígenes de scripts, estilos e imágenes en una aplicación web para evitar ataques como XSS.
+**CSP (Content Security Policy)** es un mecanismo de seguridad que limita los orígenes de scripts, estilos e imágenes en una aplicación web para evitar ataques como **XSS**.
 
 ---
 
 ## 🔧 Implementación
 
+
 ### 1. Crear una página web vulnerable sin CSP
+
+Para probar, vamos a crear una página vulnerable sin CSP.
+
+Creamos en nuestro servidor un host virtual con nombre `csp.edu`. Lo primero creamos la carpeta y el resto de archivos:
+~~~
+mkdir /var/www/html/CSP
+~~~
+** Archivo `/etc/apache2/sites-available/csp.conf`:**
+
+~~~
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        ServerName csp.edu
+
+        DocumentRoot /var/www/html/CSP
+
+
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>
+
+~~~
+
+Habilitamos el host virtual y reiniciamos el servicio
+
+~~~
+a2ensite csp.conf
+service apache2 reload
+~~~
+
+Comprobamos también que hemos añadido en `/etc/hosts` el nombre del host virtual:
+
+```
+127.0.0.1       csp.edu
+```
+
+Y creamos los archivos para probar.
+
+El archivo index.html nos mostrará una caja de texto en la que podremos introducir nuestro nombre para que nos salude.
 
 **Archivo `index.html`:**
 
@@ -42,6 +85,9 @@ CSP (Content Security Policy) es un mecanismo de seguridad que limita los oríge
 </body>
 </html>
 ```
+
+Creamos un ficher xss.php que es llamado desde `index.html` con el nombre introducido. Con él vamos a probar si la web es vulnerable a ataques **XSS**.
+
 
 **Archivo `xss.php`:**
 
