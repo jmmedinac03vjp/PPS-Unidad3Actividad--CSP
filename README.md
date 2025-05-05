@@ -20,6 +20,22 @@ Aplicar una Content Security Policy (CSP) restrictiva y evaluar su impacto.
 **CSP (Content Security Policy)** es un mecanismo de seguridad que limita los orígenes de scripts, estilos e imágenes en una aplicación web para evitar ataques como **XSS**.
 
 ---
+## Iniciar entorno de pruebas
+
+-Situáte en la carpeta de del entorno de pruebas de nuestro servidor LAMP e inicia el escenario docker-compose
+
+~~~
+docker-compose up -d
+~~~
+
+Cómo estamos utilizando un escenario docker-compose, para acceder a nuestra máquina tendremos que ejecutar:
+
+~~~
+docker exec -it lamp-php83 /bin/bash
+~~~
+
+Nuestro contenedor que contiene el servicio web, como ves se llama lamp-php83. Si la carpeta donde tienes el escenario tiene otro nombre diferente de lamp, tendrás que cambiar el nombre.
+
 
 ## 🔧 Implementación
 
@@ -29,20 +45,19 @@ Aplicar una Content Security Policy (CSP) restrictiva y evaluar su impacto.
 Para probar, vamos a crear una página vulnerable sin CSP.
 
 Creamos en nuestro servidor un host virtual con nombre `csp.edu`. Lo primero creamos la carpeta y el resto de archivos:
+
 ~~~
 mkdir /var/www/html/CSP
 ~~~
-** Archivo `/etc/apache2/sites-available/csp.conf`:**
 
+**Archivo `/etc/apache2/sites-available/csp.conf`:**
 ~~~
 <VirtualHost *:80>
 
         ServerAdmin webmaster@localhost
-        ServerName csp.edu
+        ServerName csp.pps.edu
 
         DocumentRoot /var/www/html/CSP
-
-
 
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -61,7 +76,7 @@ service apache2 reload
 Comprobamos también que hemos añadido en `/etc/hosts` el nombre del host virtual:
 
 ```
-127.0.0.1       csp.edu
+127.0.0.1       csp.pps.edu      www.csp.pps.edu
 ```
 
 Y creamos los archivos para probar.
@@ -97,13 +112,30 @@ Creamos un ficher xss.php que es llamado desde `index.html` con el nombre introd
 ?>
 ```
 
+Y, si no está, cambiamos el propietario de todo el directorio a www-data:
+
+```
+chown -R  www-data:www-data CSP/
+```
+
+Al acceder al servidor `http://csp.pps.edu` se nos mostrará algo así:
+
+![](csp1.png)
+
+
 **Ataque XSS de prueba:**
+
+Para probar si es vulnerable a ataques  **XSS** introducimos en el campo de saludo:
 
 ```html
 <script>alert('XSS ejecutado!')</script>
 ```
 
+![](csp2.png)
+
 Si el `alert()` se ejecuta, la página es vulnerable.
+
+![](csp3.png)
 
 ---
 
