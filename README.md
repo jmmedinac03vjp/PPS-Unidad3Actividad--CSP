@@ -50,7 +50,7 @@ Creamos en nuestro servidor un host virtual con nombre `csp.edu`. Lo primero cre
 mkdir /var/www/html/CSP
 ~~~
 
-**Archivo `/etc/apache2/sites-available/csp.conf`:**
+Archivo `/etc/apache2/sites-available/csp.conf`:
 ~~~
 <VirtualHost *:80>
 
@@ -83,7 +83,7 @@ Y creamos los archivos para probar.
 
 El archivo index.html nos mostrará una caja de texto en la que podremos introducir nuestro nombre para que nos salude.
 
-**Archivo `index.html`:**
+Archivo `index.html`:
 
 ```html
 <!DOCTYPE html>
@@ -104,7 +104,7 @@ El archivo index.html nos mostrará una caja de texto en la que podremos introdu
 Creamos un ficher xss.php que es llamado desde `index.html` con el nombre introducido. Con él vamos a probar si la web es vulnerable a ataques **XSS**.
 
 
-**Archivo `xss.php`:**
+Archivo `xss.php`:
 
 ```php
 <?php 
@@ -120,7 +120,7 @@ chown -R  www-data:www-data CSP/
 
 Al acceder al servidor `http://csp.pps.edu` se nos mostrará algo así:
 
-![](csp1.png)
+![](images/csp1.png)
 
 
 **Ataque XSS de prueba:**
@@ -131,23 +131,35 @@ Para probar si es vulnerable a ataques  **XSS** introducimos en el campo de salu
 <script>alert('XSS ejecutado!')</script>
 ```
 
-![](csp2.png)
+![](images/csp2.png)
 
 Si el `alert()` se ejecuta, la página es vulnerable.
 
-![](csp3.png)
+![](images/csp3.png)
 
 ---
 
 ### 2. Implementar CSP
 
-**Editar `000-default.conf`:**
+Editamos el archivo de configuración del sitio virtual`/etc/apache2/sites-availabe/csp.conf`:
 
 ```apache
-<IfModule mod_headers.c>
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'"
-</IfModule>
+<VirtualHost *:80>
+
+        ServerName csp.pps.edu
+        ServerAdmin webmaster@localhost
+
+        DocumentRoot /var/www/html/CSP
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        <IfModule mod_headers.c>
+            Header always set Content-Security-Policy "default-src 'self'; scri>
+        </IfModule>
+</VirtualHost>
 ```
+
 
 **Significado:**
 
@@ -160,9 +172,11 @@ Si el `alert()` se ejecuta, la página es vulnerable.
 
 ### 3. Habilitar `mod_headers` y reiniciar Apache
 
+Habilitamos el módulo **headers** y recargamos el servicio **apache2** para que surtan efectos los cambios
+
 ```bash
-sudo a2enmod headers
-sudo systemctl restart apache2
+a2enmod headers
+service apache2 reload
 ```
 
 ---
@@ -172,7 +186,7 @@ sudo systemctl restart apache2
 Accede a:
 
 ```
-http://localhost/csp/index.html
+http://csp.pps.edu/
 ```
 
 Intenta:
