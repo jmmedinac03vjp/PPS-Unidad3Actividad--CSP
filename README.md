@@ -137,6 +137,8 @@ Si el `alert()` se ejecuta, la página es vulnerable.
 
 ![](images/csp3.png)
 
+Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#Pruebas-BYPASS)
+
 ---
 
 ### 2. Implementar CSP
@@ -234,7 +236,6 @@ Dependiendo de dónde estén colocadas las cabeceras de **CSP** así será su al
 
   - Si Apache usa múltiples sitios (a2ensite), también se debe editar cada archivo en /etc/apache2/sites-available/.
 
-Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#🧪-Pruebas-de-BYPASS)
 
 Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#Pruebas-BYPASS)
 
@@ -333,7 +334,7 @@ Cambiamos las cabeceras por las siguientes:
 
 ---
 
-## 🧪 Pruebas de BYPASS
+ 🧪
 ## Pruebas BYPASS
 
 1. Inline Script:
