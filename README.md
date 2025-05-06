@@ -234,7 +234,8 @@ Dependiendo de dónde estén colocadas las cabeceras de **CSP** así será su al
 
   - Si Apache usa múltiples sitios (a2ensite), también se debe editar cada archivo en /etc/apache2/sites-available/.
 
-Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#🧪_Pruebas_de_BYPASS)
+Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](##🧪_Pruebas_de_BYPASS)
+Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](##Pruebas_de_BYPASS)
 
 ---
 
