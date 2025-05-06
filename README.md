@@ -155,7 +155,7 @@ Editamos el archivo de configuración del sitio virtual`/etc/apache2/sites-avail
         CustomLog ${APACHE_LOG_DIR}/access.log combined
 
         <IfModule mod_headers.c>
-            Header always set Content-Security-Policy "default-src 'self'; scri>
+            Header always set Content-Security-Policy "default-src 'self'; script-src 'self'"
         </IfModule>
 </VirtualHost>
 ```
@@ -163,16 +163,21 @@ Editamos el archivo de configuración del sitio virtual`/etc/apache2/sites-avail
 
 **Significado:**
 
-- `default-src 'self'`: Solo recursos del mismo origen.
-- `script-src 'self'`: Solo scripts locales.
+- `Header always set`: “Agrega este header HTTP siempre, sin importar el tipo de respuesta.” Hay otras variantes como set, append, unset, etc...
 
-⚠️ Bloquea cualquier script externo o inline.
+- `Content-Security-Policy`: Es el header que ayuda a proteger el sitio de ataques XSS.
+
+- `default-src 'self'`:  Todos los recursos (imágenes, estilos, scripts, iframes, etc.) solo se pueden cargar desde el mismo origen que la página (misma IP/dominio y puerto).
+
+- `script-src 'self'`: Específicamente los scripts solo pueden venir del mismo lugar.
+
+⚠️ ¿Qué no permite? Cualquier script externo (como los de Google Analytics, jQuery CDN, etc.), y más importante: los scripts insertados directamente en el HTML
 
 ---
 
 ### 3. Habilitar `mod_headers` y reiniciar Apache
 
-Habilitamos el módulo **headers** y recargamos el servicio **apache2** para que surtan efectos los cambios
+Habilitamos el módulo **headers** (si no está habilitado Apache ignora el bloque IfModule por completo) y recargamos el servicio **apache2** para que surtan efectos los cambios
 
 ```bash
 a2enmod headers
@@ -195,11 +200,12 @@ Intenta:
 <script>alert('XSS ejecutado!')</script>
 ```
 
-**La consola debe mostrar un error como:**
+El navegador debería bloquearlo y la consola del navegador (Pulsa F12 > "Consola") debería mostrar un error similar a:
 
 ```
 Refused to execute script because 'script-src' directive disallows it.
 ```
+![](images/csp6.png)
 
 ---
 
@@ -208,17 +214,30 @@ Refused to execute script because 'script-src' directive disallows it.
 - Verifica CSP con:
   
 ```bash
-curl -I http://localhost/csp/index.html | grep Content-Security-Policy
+curl -I http://csp.pps.edu/index.html | grep Content-Security-Policy
 ```
 
-- Dónde aplicar CSP:
-  - `apache2.conf`: aplica a todo el servidor.
-  - `.htaccess`: solo a una carpeta.
-  - `000-default.conf`: al VirtualHost principal.
+Si muestra la política CSP en la salida, Apache la está aplicando correctamente.
 
+![](images/csp4.png)
+
+
+**Dónde aplicar CSP**
+
+Dependiendo de dónde estén colocadas las cabeceras de **CSP** así será su alcance. Así si están colocados en:
+
+  - `apache2.conf`: aplica a todo el servidor.
+
+  - `.htaccess`: Se aplica sólo a la carpeta donde está incluido ese **.htaccess**.
+
+  - `000-default.conf`: Se aplica sólo al VirtualHost principal.
+
+  - Si Apache usa múltiples sitios (a2ensite), también se debe editar cada archivo en /etc/apache2/sites-available/.
+
+Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](##Pruebas_de_BYPASS)
 ---
 
-## 🔐 CSP Más Estricto
+## 🔐 CSP Más Estricto para bloquear Scripts Inline y `eval()`
 
 **Política avanzada:**
 
@@ -230,10 +249,52 @@ curl -I http://localhost/csp/index.html | grep Content-Security-Policy
 
 **¿Qué hace esta política?**
 
-- Bloquea `eval()` y scripts inline sin `nonce`.
-- Impide iframes, objetos, y el uso de `<base>` externo.
+- Solo permite scripts de la misma página `self`.
+
+- Bloquea `eval()`, `setTimeout('code')` y `setInterval('code')`.
+
+- Bloquea **scripts inline**, a menos que usen `nonce="random123"`.
+
+- Bloquea `iframes` y contenido incrustado `frame-ancestors 'none'`.
+
+- Evita la carga de `object` y `embed` (ataques con Flash o PDFs).
+
+- Evita el uso de `<base>` externo (`base-uri 'self'`).
+
+
+En resumen, impide iframes, objetos, y el uso de `<base>` externo.
+
+Para probar hacemos los cambios:
+
+Archivo ` /etc/apache2/sites-available/csp.conf`
+
+```apache
+VirtualHost *:80>
+
+        ServerName csp.pps.edu
+        ServerAdmin webmaster@localhost
+
+        DocumentRoot /var/www/html/CSP
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        <IfModule mod_headers.c>
+            Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'nonce-random123'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        </IfModule>
+</VirtualHost>
+```
+
+Recargamos el servidor apache
+
+```apache
+service apache2 reload
+```
+
 
 **Ejemplo de script inline permitido con `nonce`:**
+
+Insertamos en el campo el siguiente script:
 
 ```html
 <script nonce="random123">
@@ -241,10 +302,16 @@ curl -I http://localhost/csp/index.html | grep Content-Security-Policy
 </script>
 ```
 
+Podemos ver en la consola del navegador,  que si se ha ejecutado:
+
+![](images/csp5.png)
+
+
 ---
 
 ## 🔒 CSP Máxima Seguridad (Recomendada para Producción)
 
+Cambiamos las cabeceras por las siguientes:
 ```apache
 <IfModule mod_headers.c>
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'nonce-ABC123'; style-src 'self' 'nonce-ABC123'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
@@ -253,8 +320,12 @@ curl -I http://localhost/csp/index.html | grep Content-Security-Policy
 
 **Mejoras:**
 
-- Evita inline scripts y estilos.
-- Bloquea contenido HTTP en sitios HTTPS.
+- Evita inline scripts y estilos CSS inseguros (style-src 'nonce-ABC123').
+
+- Bloquea si la página intenta cargar contenido HTTP en un sitio HTTPS (upgrade-insecure-requests).
+
+- Evita la carga de object, embed y frames.
+
 - Mayor defensa contra inyecciones.
 
 ---
