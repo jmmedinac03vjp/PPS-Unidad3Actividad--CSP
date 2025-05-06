@@ -236,7 +236,7 @@ Dependiendo de dónde estén colocadas las cabeceras de **CSP** así será su al
 
 Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#🧪-Pruebas-de-BYPASS)
 
-Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#Pruebas-de-BYPASS)
+Puedes hacer pruebas con los ejemplos [que puedes encontrar en las sección de Pruebas de BYPASS al final del repositorio](#Pruebas-BYPASS)
 
 ---
 
@@ -334,6 +334,7 @@ Cambiamos las cabeceras por las siguientes:
 ---
 
 ## 🧪 Pruebas de BYPASS
+## Pruebas BYPASS
 
 1. Inline Script:
 ```html
